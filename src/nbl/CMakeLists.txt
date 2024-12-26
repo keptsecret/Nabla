@@ -119,6 +119,8 @@ unset(NABLA_HEADERS_PUBLIC2 ${NBL_TMP_FULL_PATHS})
 
 set(NBL_CORE_SOURCES
 	${NBL_ROOT_PATH}/src/nbl/core/IReferenceCounted.cpp
+	${NBL_ROOT_PATH}/src/nbl/core/alloc/refctd_memory_resource.cpp
+	${NBL_ROOT_PATH}/src/nbl/core/hash/blake.cpp
 )
 set(NBL_SYSTEM_SOURCES
 	${NBL_ROOT_PATH}/src/nbl/system/DefaultFuncPtrLoader.cpp
@@ -387,11 +389,6 @@ if(_NBL_BUILD_DPL_)
 	target_include_directories(Nabla PUBLIC ${ONEDPL_INSTALL_DIR}/include)
 	target_link_libraries(Nabla INTERFACE tbb tbbmalloc tbbmalloc_proxy)
 endif()
-
-# blake3
-target_link_libraries(Nabla PUBLIC 
-	blake3
-)
 
 # boost
 target_include_directories(Nabla PUBLIC "${BOOST_PREPROCESSOR_INCLUDE}")
@@ -715,7 +712,6 @@ if(NBL_STATIC_BUILD)
 	nbl_install_lib(glslang)
 	nbl_install_lib(GenericCodeGen)
 	nbl_install_lib(MachineIndependent)
-	nbl_install_lib(HLSL)
 	nbl_install_lib(jpeg-static)
 	if (_NBL_COMPILE_WITH_OPEN_EXR_)
 		nbl_install_lib(OpenEXR)
@@ -729,7 +725,6 @@ if(NBL_STATIC_BUILD)
 	nbl_install_lib(SPIRV)
 	nbl_install_lib(SPIRV-Tools-static) # TODO: make this function/macro work with alias target
 	nbl_install_lib(SPIRV-Tools-opt)
-	nbl_install_lib(OGLCompiler)
 	nbl_install_lib(OSDependent)
 	nbl_install_lib(zlibstatic)
 	nbl_install_lib(simdjson)

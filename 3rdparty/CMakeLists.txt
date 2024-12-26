@@ -161,11 +161,6 @@ target_include_directories(SPIRV PUBLIC "${GLSLANG_GENERATED_INCLUDEDIR}")
 set(SHADERC_SKIP_TESTS ON CACHE INTERNAL "Skip shaderc tests?")
 set(SHADERC_SKIP_INSTALL ON CACHE INTERNAL "Install shaderc?")
 
-# if it doesn't work without the `touch` on Linux, then fetch the latest submodule head of shaderc and try again
-# https://github.com/google/shaderc/issues/568
-if (UNIX)
-	file(WRITE ${THIRD_PARTY_SOURCE_DIR}/shaderc/libshaderc/libshaderc_combined.a "")
-endif()
 add_subdirectory(shaderc shaderc EXCLUDE_FROM_ALL)
 
 # libjpeg-turbo
@@ -234,6 +229,7 @@ if(_NBL_COMPILE_WITH_OPEN_EXR_)
 	set(BUILD_STATIC_LIBS ${_OLD_BUILD_STATIC_LIBS})
 	set(BUILD_TESTING ${_OLD_BUILD_TESTING})
 endif()
+
 
 #gli
 option(_NBL_COMPILE_WITH_GLI_ "Build with GLI library" ON)
@@ -382,8 +378,17 @@ if(NBL_BUILD_IMGUI)
 	
 	target_link_libraries(imtestengine PUBLIC imtestsuite)
 	
-	set(IMGUIZMO_BUILD_EXAMPLE OFF)
-	add_subdirectory(imguizmo EXCLUDE_FROM_ALL)
+	# imguizmo
+	add_library(imguizmo 
+		"${CMAKE_CURRENT_SOURCE_DIR}/imguizmo/GraphEditor.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/imguizmo/ImCurveEdit.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/imguizmo/ImGradient.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/imguizmo/ImGuizmo.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/imguizmo/ImSequencer.cpp"
+	)
+
+	target_include_directories(imguizmo PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/imguizmo>)
+	target_link_libraries(imguizmo PUBLIC imgui)
 
 	# note we override imgui config with our own
 	set(NBL_IMGUI_USER_CONFIG_FILEPATH "${NBL_IMGUI_ROOT}/nabla_imconfig.h")
@@ -461,7 +466,6 @@ set(NBL_3RDPARTY_TARGETS
 				simdjson
 				nlohmann_json
 				glslang
-				OGLCompiler 
 				OSDependent
 				MachineIndependent
 				GenericCodeGen
@@ -486,9 +490,6 @@ if (NBL_BUILD_MITSUBA_LOADER)
 endif()
 if (NBL_BUILD_IMGUI)
 	list(APPEND NBL_3RDPARTY_TARGETS imgui implot imtestsuite imtestengine imguizmo)
-endif()
-if(ENABLE_HLSL)
-	list(APPEND NBL_3RDPARTY_TARGETS HLSL)
 endif()
 
 foreach(trgt IN LISTS NBL_3RDPARTY_TARGETS)

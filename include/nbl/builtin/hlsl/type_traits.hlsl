@@ -156,10 +156,9 @@ namespace nbl
 {
 namespace hlsl
 {
-
+//
 namespace impl
 {
-    
 template<template<class> class Trait, class T>
 struct base_type_forwarder : Trait<T> {};
 
@@ -168,13 +167,16 @@ struct base_type_forwarder<Trait,vector<T,N> > : Trait<T> {};
 
 template<template<class> class Trait, class T, uint16_t N, uint16_t M>
 struct base_type_forwarder<Trait,matrix<T,N,M> > : Trait<T> {};
-
 }
+
+//
+template<class>
+struct make_void { using type = void; };
+
 
 #ifdef __HLSL_VERSION // HLSL
 
-
-#define decltype(expr) __decltype(expr)
+#define decltype(...) __decltype(__VA_ARGS__)
 
 template<class T>
 struct type_identity 
@@ -391,9 +393,6 @@ struct enable_if<true, T> : type_identity<T> {};
 template<class T>
 struct alignment_of;
 
-template<class>
-struct make_void { using type = void; };
-
 // reference stuff needed for semantics 
 
 // not for "human consumption"
@@ -607,6 +606,8 @@ NBL_CONSTEXPR bool is_unsigned_v = is_unsigned<T>::value;
 template<class T>
 NBL_CONSTEXPR bool is_integral_v = is_integral<T>::value;
 template<class T>
+NBL_CONSTEXPR bool is_floating_point_v = is_floating_point<T>::value;
+template<class T>
 NBL_CONSTEXPR bool is_signed_v = is_signed<T>::value;
 template<class T>
 NBL_CONSTEXPR bool is_scalar_v = is_scalar<T>::value;
@@ -614,6 +615,9 @@ template<class T>
 NBL_CONSTEXPR uint32_t alignment_of_v = alignment_of<T>::value;
 
 // Overlapping definitions
+template<typename T>
+using make_void_t = typename make_void<T>::type;
+
 template<bool C, typename T, T A, T B>
 struct conditional_value
 {
@@ -671,30 +675,66 @@ struct scalar_type<matrix<T,N,M>,false>
 template<typename T>
 using scalar_type_t = typename scalar_type<T>::type;
 
+template<uint16_t bytesize>
+struct integer_of_size
+{
+    using type = void;
+};
+
+#ifndef __HLSL_VERSION
+template<>
+struct integer_of_size<1>
+{
+    using type = int8_t;
+};
+#endif
+template<>
+struct integer_of_size<2>
+{
+    using type = int16_t;
+};
+template<>
+struct integer_of_size<4>
+{
+    using type = int32_t;
+};
+template<>
+struct integer_of_size<8>
+{
+    using type = int64_t;
+};
+template<uint16_t bytesize>
+using integer_of_size_t = typename integer_of_size<bytesize>::type;
 
 template<uint16_t bytesize>
 struct unsigned_integer_of_size
 {
     using type = void;
 };
-
+#ifndef __HLSL_VERSION
+template<>
+struct unsigned_integer_of_size<1>
+{
+    using type = uint8_t;
+};
+#endif
 template<>
 struct unsigned_integer_of_size<2>
 {
     using type = uint16_t;
 };
-
 template<>
 struct unsigned_integer_of_size<4>
 {
     using type = uint32_t;
 };
-
 template<>
 struct unsigned_integer_of_size<8>
 {
     using type = uint64_t;
 };
+template<uint16_t bytesize>
+using unsigned_integer_of_size_t = typename unsigned_integer_of_size<bytesize>::type;
 
 }
 }

@@ -352,11 +352,13 @@ std::string CHLSLCompiler::preprocessShader(std::string&& code, IShader::E_SHADE
     }
     catch (boost::wave::preprocess_exception& e)
     {
-        preprocessOptions.logger.log("Boost.Wave %s exception caught!",system::ILogger::ELL_ERROR,e.what());
+        preprocessOptions.logger.log("%s exception caught. %s [%s:%d:%d]",system::ILogger::ELL_ERROR,e.what(),e.description(),e.file_name(),e.line_no(),e.column_no());
+        return {};
     }
     catch (...)
     {
         preprocessOptions.logger.log("Unknown exception caught!",system::ILogger::ELL_ERROR);
+        return {};
     }
     
     // for debugging cause MSVC doesn't like to show more than 21k LoC in TextVisualizer
@@ -483,7 +485,7 @@ core::smart_refctd_ptr<ICPUShader> CHLSLCompiler::compileToSPIRV_impl(const std:
         return nullptr;
     }
 
-    auto outSpirv = core::make_smart_refctd_ptr<ICPUBuffer>(compileResult.objectBlob->GetBufferSize());
+    auto outSpirv = ICPUBuffer::create({ compileResult.objectBlob->GetBufferSize() });
     memcpy(outSpirv->getPointer(), compileResult.objectBlob->GetBufferPointer(), compileResult.objectBlob->GetBufferSize());
     
     // Optimizer step
